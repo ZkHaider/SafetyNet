@@ -1,51 +1,170 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title></title>
-    <meta charset="utf-8" />
-    <link href="kendo/styles/kendo.mobile.all.min.css" rel="stylesheet" />
-    <link href="styles/main.css" rel="stylesheet" />
-
-    <script src="cordova.js"></script>
-    <script src="kendo/js/jquery.min.js"></script>
-    <script src="kendo/js/kendo.mobile.min.js"></script>
-
-    <script src="scripts/app.js"></script>
-
-</head>
-<body>
- 
-  <div data-role="layout" data-id="main">
-    <div data-role="header">
-      <div data-role="navbar">
-        <span data-role="view-title"></span>
-        <a data-role="button" href="#appDrawer" data-rel="drawer" data-align="left" data-icon="drawer-button"></a>
-      </div>
-    </div>
-
-    <!-- application views will be rendered here -->
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+    <title>Basic Map</title>
+    <style  type="text/css">
+        body, html {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        #mapDiv {
+            height: 100%;
+            width: 100%;
+            margin: 0px;
+        }
+    </style>
+<link rel="stylesheet" type="text/css" href="http://js.arcgis.com/3.8/js/esri/css/esri.css">
     
-  </div>
-
-  <!-- application drawer and contents -->
-  <div data-role="drawer" id="appDrawer" style="width: 270px" data-title="Navigation">
-    <div data-role="header">
-      <div data-role="navbar">
-        <span data-role="view-title"></span>
-      </div>
+</head>
+<body class="claro">
+<div>
+    <a href="views/settings.html">Settings</a>
+</div>
+    <div id="mainWindow" data-dojo-type="BorderContainer" data-dojo-props="design:'headline'" style="width:100%; height:100%;">
+    <div id="mapDiv" class="roundedCorners shadow" data-dojo-type="ContentPane" data-dojo-props="region:'center'"></div>
+    <div id="rightPane" class="roundedCorners shadow" data-dojo-type="ContentPane" data-dojo-props="region:'right'" >
+        <div id="legend"></div>
     </div>
-    <ul data-role="listview">
-      <li>
-        <a href="views/home.html">Home</a>
-      </li>
-      <li>
-        <a href="views/settings.html">Settings</a>
-      </li>
-      <li>
-        <a href="views/contacts.html">Contacts</a>
-      </li>
-    </ul>
-  </div>       
+</div>
+<!-- Load the library references for ArcGIS API for JavaScript -->
+<script type="text/javascript" src="http://js.arcgis.com/3.8compact"></script>
+<script type="text/javascript" src="cordova.js"></script>
+    
+ <script>
+        var app = {
+            // Application Constructor
+            initialize: function() {
+                this.bindEvents();
+            },
+            // Bind Event Listeners
+            //
+            // Bind any events that are required on startup. Common events are:
+            // 'load', 'deviceready', 'offline', and 'online'.
+            bindEvents: function() {
+                document.addEventListener('deviceready', this.onDeviceReady, false);
+            },
+            // deviceready Event Handler
+            //
+            // The scope of 'this' is the event. In order to call the 'receivedEvent'
+            // function, we must explicity call 'app.receivedEvent(...);'
+            onDeviceReady: function() {
+                app.receivedEvent('deviceready');
+            },
+            // Update DOM on a Received Event
+            receivedEvent: function(id) {  
+                console.log('Received Event: ' + id);
+                mapInit();
+            }
+        }; 
+     
+     // Wait until map has loaded before starting geolocation
+                    map.on("load",startGeolocation);                                        
+
+                    // Create the marker symbol
+                    var markerSymbol = new PictureMarkerSymbol({
+                        "angle":0,
+                        "xoffset":0,
+                        "yoffset":0,
+                        "type":"esriPMS",
+                        "url":"images/green-pin.png",
+                        "width":35,
+                        "height":35
+                    })
+
+                    function startGeolocation(){                                                         
+                        console.log("Starting geolocation...");
+                        navigator.geolocation.getCurrentPosition(locationSuccess,locationError,{setHighAccuracy:true});
+                    }
+
+                    // Handle location success
+                    function locationSuccess(position){
+                        if(position.coords.latitude != null || position.coords.longitude != null){
+                            console.log("long: " + position.coords.longitude + ", lat: " + position.coords.latitude);
+                            var wgsPt = new Point(position.coords.longitude,position.coords.latitude, new SpatialReference({wkid:4326})); 
+                            map.graphics.add(new Graphic(wgsPt, markerSymbol));
+                            map.centerAndZoom(wgsPt, 12);
+                        }
+                    }
+
+                    function locationError(err){
+                        console.log("locationError: " + err.toString());
+                    }
+     
+</script>
+
+<script>
+    
+    var app = {
+        // Application Constructor
+        initialize: function() {
+            this.bindEvents();
+        },
+        // Bind Event Listeners
+        //
+        // Bind any events that are required on startup. Common events are:
+        // 'load', 'deviceready', 'offline', and 'online'.
+        bindEvents: function() {
+            document.addEventListener('deviceready', this.onDeviceReady, false);
+        },
+        // deviceready Event Handler
+        //
+        // The scope of 'this' is the event. In order to call the 'receivedEvent'
+        // function, we must explicity call 'app.receivedEvent(...);'
+        onDeviceReady: function() {
+            app.receivedEvent('deviceready');
+        },
+        // Update DOM on a Received Event
+        receivedEvent: function(id) {
+            console.log('Received Event: ' + id);
+            mapInit();
+        }
+    };      
+    
+    var mapInit = function(){ 
+        require(["esri/map","esri/arcgis/utils","esri/dijit/Legend","esri/dijit/Scalebar","dijit/layout/BorderContainer",
+        "dijit/layout/ContentPane"],
+            function(Map,utils,Legend,Scalebar,BorderContainer,ContentPane) {
+                // Create map
+
+                var map = null, helper;
+                utils.arcgisUrl = utils.arcgisUrl.replace("file:", "http:");
+                utils.createMap("6f966793bec04c85800df1f503869c85", "mapDiv")
+                    .then(function(response) {
+                        dojo.byId("title").innerHTML = response.itemInfo.item.title;
+                        dojo.byId("subtitle").innerHTML = response.itemInfo.item.snippet;
+
+                        map = response.map;                    
+
+                        //add the scalebar 
+                        var scalebar = new Scalebar({
+                            map: map,
+                            scalebarUnit: "english"
+                        });
+                    
+                        //add the legend. Note that we use the utility method getLegendLayers to get 
+                        //the layers to display in the legend from the createMap response.
+                        var legendLayers = arcgisUtils.getLegendLayers(response); 
+                        var legendDijit = new Legend({
+                            map: map,
+                            layerInfos: legendLayers
+                        },"legend");
+                        legendDijit.startup();
+
+                },function(error){
+                    console.log("Map creation failed: ", dojo.toJson(error));
+                });
+            }
+        );
+    }
+    
+    app.initialize();
+        
+</script>
+
 
 </body>
 </html>
